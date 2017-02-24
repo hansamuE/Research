@@ -1,14 +1,15 @@
 package ml.clustering123;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ServeRateCal_SC_edit{
 	static double CachedVideoP=0;
 	public static void Cal(boolean isCooperative, String NeighborFile) throws NumberFormatException, IOException{
-		String popularityinput = "PopularityTrainingCos20.txt";//0715.txt";
+		String popularityinput = "PopularityTrainingCos10.txt";//0715.txt";
 		String type = "puv";
 //		int nSCNeighbor =2;
 		double[][] ClusSim = new double[AfterClustering.nClus][AfterClustering.nClus];
@@ -137,7 +138,14 @@ public class ServeRateCal_SC_edit{
 		int Full=30;
 		int nSelfServed = 0;
 		int nNeighborServed = 0;
-		int nDownload = 0;		
+		int nDownload = 0;
+
+		Timestamp timestamp_end = Timestamp.valueOf("2016-06-23 08:00:00");
+		int request_no = 0;
+		int download_no = 0;
+		FileWriter fileWriter = new FileWriter("download_rate");
+		BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
 		for(int rid =0; rid < AfterClustering.m_nEndRequestSize; rid++){	
 			CachedVideoP = 0;
 			boolean isSelfServed = false;
@@ -145,6 +153,16 @@ public class ServeRateCal_SC_edit{
 			int uid = AfterClustering.request[rid].UserID;
 			int fid = AfterClustering.request[rid].VideoID;
 			int gid = AfterClustering.enduser[uid].GroupID;
+
+
+			if (AfterClustering.request[rid].timestamp > Integer.valueOf((Long.toString(timestamp_end.getTime()).subSequence(3, 10)).toString())) {
+//				System.out.println(new Date(timestamp_end.getTime()) + "\t" + (double) download_no / request_no);
+				bufferedWriter.write(new Date(timestamp_end.getTime()) + "\t" + (double) download_no / request_no + "\n");
+				timestamp_end.setTime(timestamp_end.getTime() + 86400000);
+				request_no = 0;
+				download_no = 0;
+			}
+			request_no++;
 			
 			///
 			
@@ -247,6 +265,8 @@ public class ServeRateCal_SC_edit{
 						
 				}
 				if(isDownload){
+					download_no++;
+
 					nDownload++;				
 					System.out.println("Served Dow");
 //					System.out.println("file = " + fid);
@@ -279,6 +299,8 @@ public class ServeRateCal_SC_edit{
 							
 				
 		}
+
+		bufferedWriter.close();
 			
 			
 			
