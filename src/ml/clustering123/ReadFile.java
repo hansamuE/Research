@@ -1,25 +1,11 @@
 package ml.clustering123;
 
-import static ml.utils.Matlab.full;
-import static ml.utils.Matlab.find;
-import static ml.utils.Printer.display;
-import static ml.utils.Time.tic;
-import static ml.utils.Time.toc;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.Map;
-
-import la.vector.Vector;
-import la.matrix.Matrix;
-import ml.clustering.Clustering;
-import ml.options.ClusteringOptions;
-import ml.options.SpectralClusteringOptions;
 
 
 public class ReadFile {
@@ -31,15 +17,12 @@ public class ReadFile {
 	static String posfile = "user position.txt";
 	static boolean isTimeWeight = false;
 	static int thres_distance = 10000; //user's distance	
-//	static int InitCacheSize = 500;
 	static int thre_requestfreq = 86400; //3000
 	static double cluthres = 1.3;
 	
-//	static double average_neighbor = 0;
 	static int m_nUserSize = 196;//16337;//9500;//16337;//540;//1835;//5047;
 	static int m_nItemSize = 10;//303332;//110578;//303332;//2135;//8933;//35744;
 	static int m_nRequest = 5676;//611968;//200000;//611968;//2747;//12323;//54793;
-//	static int m_nTestReqest=0;
 	static int timethres = 999999999;//2244475;//1902364085;//1202364085;
 	static int thres_usercount = 0;//10;//10;//15; //8,3,2
 	static int thres_filecount = 0;//150;//150;//200; //18,5,2
@@ -54,15 +37,11 @@ public class ReadFile {
 	static int m_nEndRequestSize;
 	static int ClusterUserSize;
 	static int[] ClusUcount= new int[nClus];
-	static int[] ClusRcount=new int[nClus];
-	
+
 	static double[][] ContentFrequency;
 	static double[][] Puv;
 	static double[][] Graph;
-	static int[][] ClusterUser;
-	
-	static double[] CachedVideoP;
-	
+
 	public static class Request{
 		int ID=-1;
 		int timestamp = -1;
@@ -74,12 +53,10 @@ public class ReadFile {
 	public static class User{
 		int ID = -1;
 		int Fix_ID = -1;
-		//int requestuser = -1;
 		String Name;
 		LinkedList<Integer> File = new LinkedList<Integer>();
 		int count = 0;
-		int count_duplicate = 0;
-			
+
 	}
 	
 	public static class File{
@@ -105,30 +82,14 @@ public class ReadFile {
 	
 	public static class SC{
 		int ID = -1;
-		double posx = -1;
-		double posy = -1;
-		int nRequest =0;
 		LinkedList<Integer> User = new LinkedList<Integer>();
-		LinkedList<Integer> NeighborSC = new LinkedList<Integer>();	
-				
-//		LinkedList<Integer>	CachedFile = new LinkedList<Integer>();
-//		LinkedList<Integer>	CachedProportion = new LinkedList<Integer>();  // 1/2 1/3 1/5
-//		LinkedList<Integer>	FileLastTime = new LinkedList<Integer>();
-		
-//		int[] CacheFile = new int [InitCacheSize];		
-//		int[] CachedProportion = new int [InitCacheSize];
-//		int[] FileLastTime = new int [InitCacheSize];
-//		int remaining_space = InitCacheSize;
 	}
 	
 	static User[] user;
 	static File[] file;
-	//static Request[] request;
 	static Request[] totalrequest;
 	static Request[] request;
-//	static Request[] testingrequest;
-	
-	
+
 	static EndUser[] enduser;
 	static SC[] sc;
 	
@@ -137,8 +98,7 @@ public class ReadFile {
 	public static void main(String[] args) throws Exception{
 		user = new User[m_nUserSize];
 		file = new File[m_nItemSize];
-		//request = new Request[m_nRequest];
-		totalrequest = new Request[m_nRequest];		
+		totalrequest = new Request[m_nRequest];
 		
 		
 		ReadRequestInfo(inputfile);
@@ -168,8 +128,6 @@ public class ReadFile {
 		FindRequest();
 		
 		
-		//Calculate the served rate (cooperate with users)
-//		ServeRateCal_user.Cal();
 		sc = new SC[nClus];
 		for(int i=0;i<nClus; i++){
 			sc[i] = new SC();
@@ -188,7 +146,6 @@ public class ReadFile {
 			}
 			
 			Matrix Clustering_Result = SPECTRALClustering(Puv,nClus);
-//			Matrix Clustering_Result = SPECTRALClustering(CosMatrix,nClus); //Cos method
 			int[] col = find(Clustering_Result).cols;
 			int[] row = find(Clustering_Result).rows;	
 			
@@ -199,7 +156,6 @@ public class ReadFile {
 			}
         //////////////////////////////////////////////////////////////////			
 			
-//		System.out.format("Elapsed time: %.3f seconds\n", toc());    	
 			for(int i =0; i < nClus; i++){
 				System.out.println("Cluster " +i + "# user = " + ClusUcount[i]);				
 			}
@@ -223,12 +179,6 @@ public class ReadFile {
 			Modularity_Calculating();			
 	}
 		
-
-	
-
-	
-///////////////Function	
-	
 	private static void Modularity_Calculating(){
 		System.out.println("nClus = " + nClus);
 		double two_m = 0;
@@ -257,37 +207,30 @@ public class ReadFile {
 	
 	private static void CalculateNumUser(){
 		int requestfile=-1;
-		int requestuser=-1;
-     	
+
      	int fid=0;
-     	int fid_30 = 10;  //11~30¦W(10-29)
+     	int fid_30 = 10;  //11~30ï¿½W(10-29)
      	
      	int uid=0;
-//		for(int i = 0; i < user.length; i++){
      	for(int r=0; r<totalrequest.length; r++){
      		if(totalrequest[r].timestamp < timethres){
      			int i = totalrequest[r].UserID;
      			int j = totalrequest[r].VideoID;
      			if(user[i].count>=thres_usercount){  	    			
-//	    			for(Integer q : user[i].File){	    			
-//	    				requestfile=q;
      				requestfile=j;
 	    				if (file[requestfile].count>thres_filecount){//18,5,2	    					
 	    					if(file[requestfile].Fix_ID== -1){
 	    						file[requestfile].Fix_ID=fid;
-	    						//System.out.println(fid);
 	    						fid++;
 	    					}
 	    					if(user[i].Fix_ID == -1){
 	    						user[i].Fix_ID=uid;
-	    						//System.out.println(uid);
 	    						uid++;
 	    					}
 	    				}
 	    				else if (file[requestfile].count < thres_filecount && file[requestfile].count>thres_filecount_30){
 	    					if(file[requestfile].Fix_ID== -1){
 	    						file[requestfile].Fix_ID=fid_30;
-	    						//System.out.println(fid);
 	    						fid_30++;
 	    					}
 	    				}
@@ -330,21 +273,16 @@ public class ReadFile {
 			file[i] = new File();
 		}		
 		for(int i=0;i<m_nRequest; i++){
-			//request[i] = new Request();
 			totalrequest[i] = new Request();
 		}	
 		
 		while ((line = br.readLine()) != null) {        	
         	String items[] = line.split("\t"); // #Timestamp  #YouTube server IP #Client IP    #Request #Video ID   #Content server IP
         	String timestamp=(String) items[0].subSequence(3,10);
-         	//String ClientIP = items[2];
-         	//String VideoID = items[4];    
         	for (int i = 0; i < user.length; i++){
         		if (user[i].ID == -1) break;	         		
 	         	if(items[1].equals(user[i].Name)){
 	         		find_the_same = true;
-	         		//System.out.println("find the same!");
-	         		//user[i].count++;
 	         		Client_ID=user[i].ID;
 	         		break;
 	         	}	         		
@@ -362,8 +300,7 @@ public class ReadFile {
 	         	if (file[i].ID == -1) break;	         		
 	         	if(items[2].equals(file[i].Name)) {
 	         		find_the_same = true;
-	         		//System.out.println("find the same!");
-	         			
+
 	         		Video_ID=file[i].ID;
 	         		
 	         		if(Integer.valueOf(timestamp) <= timethres){
@@ -390,8 +327,6 @@ public class ReadFile {
 	             		user[Client_ID].File.offer(Video_ID);
 	         		}
 	         		
-	         		duplicate = false;
-	         			
 	         		break;
 	         	}	         		
 	         }
@@ -437,20 +372,15 @@ public class ReadFile {
 			String items[] = line.split(" ");
 			enduser[i].posx = Double.parseDouble(items[0]);
 			enduser[i].posy = Double.parseDouble(items[1]);
-			//System.out.print(enduser[i].posx+"\t"+enduser[i].posy+"\n");			
 		}
 		
 }
 	
 	private static int[][] cal_fpopularity() throws IOException{
-		//int[] ClusRcount = new int[nClus];		
 		int[][] fpopularity = new int [nClus][m_nEndItemSize];
 		for(int rid =0; rid < m_nEndRequestSize; rid++){
-			//ClusRcount[enduser[request[rid].UserID].GroupID]++;
-			fpopularity[enduser[request[rid].UserID].GroupID][request[rid].VideoID]++;		
-			//allfpopularity[ReadFile.file[i].Fix_ID] = ReadFile.file[i].count;
-			//System.out.println(ReadFile.enduser[request[rid].UserID].GroupID);			
-			
+			fpopularity[enduser[request[rid].UserID].GroupID][request[rid].VideoID]++;
+
 		}
 		FileWriter fw = new FileWriter(OutputPopularityFile);
 		BufferedWriter bufw = new BufferedWriter(fw);  
@@ -482,11 +412,9 @@ public class ReadFile {
 	
 	private static boolean ClusAgain() throws IOException{
 		boolean isClusAgain = false;
-//		int[] ClusRcount = new int[nClus];		
 		int[][] fpopularity = new int [nClus][m_nEndItemSize];
 		fpopularity = cal_fpopularity();
-//		int[] allfpopularity = new int [m_nItemSize];	
-		
+
 		int nc = nClus;
 		for(int i =0; i < nc; i++){
 				
@@ -555,27 +483,18 @@ public class ReadFile {
 					sc[nclus] = new SC();
 					sc[nclus] = newsc[nclus];
 					ClusUcount[nclus]=newClusUcount[nclus];
-//					for(int j=0; j< InitCacheSize; j++){
-//						sc[nclus].CacheFile[j]=-1;
-//					}
-				}			
+				}
 			}
 					
 							
-//					System.out.println(row[i]+"\t" +col[i]);
-				
+
 		}
 				
-				/*String labelFilePath = "GroundTruth.txt";
-				Matrix groundTruth = loadMatrix(labelFilePath);
-				getAccuracy(spectralClustering.indicatorMatrix, groundTruth);*/
-				
-		System.out.format("Elapsed time: %.3f seconds\n", toc());    	
+		System.out.format("Elapsed time: %.3f seconds\n", toc());
 		for(int i =0; i < nClus; i++){
 			System.out.println("Cluster " +i + "# user = " + ClusUcount[i]);
 		}
 				
-		fpopularity = cal_fpopularity();
 		return isClusAgain;
 		
 	}
@@ -601,17 +520,11 @@ public class ReadFile {
 		
 		Clustering spectralClustering = new SpectralClustering(options);
 		
-		/*String dataMatrixFilePath = "CNN - DocTermCount.txt";
-		Matrix X = Data.loadMatrix(dataMatrixFilePath);*/
-		
 		double[][] data = inputdata;
-		/*Matrix X = new DenseMatrix(data);
-		X = X.transpose();*/
-		
+
 		spectralClustering.feedData(data);
 		spectralClustering.clustering(null);		
 		Matrix Clustering_Result = spectralClustering.getIndicatorMatrix();
-//		display(full(Clustering_Result));
 		return Clustering_Result;
 	}
 
@@ -628,10 +541,8 @@ public class ReadFile {
     			ContentFrequency[user[totalrequest[i].UserID].Fix_ID][file[totalrequest[i].VideoID].Fix_ID]++;
     			for(int j = 0; j < m_nEndUserSize; j++){
     				if(user[totalrequest[i].UserID].Fix_ID != j && ContentRequestTime[j][file[totalrequest[i].VideoID].Fix_ID]!=0){
-    					//System.out.println(TimeWeightMatrix[j][user[totalrequest[i].UserID].Fix_ID]);
-    					TimeWeightMatrix[j][user[totalrequest[i].UserID].Fix_ID] += videolength/Math.abs(ContentRequestTime[j][file[totalrequest[i].VideoID].Fix_ID] - totalrequest[i].timestamp); 
-    					//System.out.println(TimeWeightMatrix[j][user[totalrequest[i].UserID].Fix_ID]);
-    					TimeWeightMatrix[user[totalrequest[i].UserID].Fix_ID][j] = TimeWeightMatrix[j][user[totalrequest[i].UserID].Fix_ID];    				
+    					TimeWeightMatrix[j][user[totalrequest[i].UserID].Fix_ID] += videolength/Math.abs(ContentRequestTime[j][file[totalrequest[i].VideoID].Fix_ID] - totalrequest[i].timestamp);
+    					TimeWeightMatrix[user[totalrequest[i].UserID].Fix_ID][j] = TimeWeightMatrix[j][user[totalrequest[i].UserID].Fix_ID];
     				}
     			}
     			ContentRequestTime[user[totalrequest[i].UserID].Fix_ID][file[totalrequest[i].VideoID].Fix_ID] = totalrequest[i].timestamp;
@@ -639,8 +550,6 @@ public class ReadFile {
     	}   	
     	
      	
-     	//PrintMatrix(ContentFrequency);
-     	//double[][] Puv = new double[m_nEndUserSize][m_nEndUserSize];
      	for(int i=0; i<m_nEndUserSize-1; i++){
 			for(int j=i; j<m_nEndUserSize;j++){
 				if(i!=j){					
@@ -654,7 +563,6 @@ public class ReadFile {
 				}
 			}
 		}
-     	//double[][] Graph = new double[m_nEndUserSize][m_nEndUserSize];
      	for(int i=0; i<m_nEndUserSize-1; i++){
      		for(int j=i; j<m_nEndUserSize;j++){
      			if(Puv[i][j]==0 || User_Distance(i,j)>=thres_distance)
@@ -691,7 +599,6 @@ public class ReadFile {
         BufferedWriter bufw = new BufferedWriter(fw);  
         BufferedWriter buftestw = new BufferedWriter(testfw);
 		int rid = 0;
-		int trid =0;
 		int uid = m_nEndUserSize;
 		for(int i=0;i<m_nRequest; i++){
 			if(user[totalrequest[i].UserID].Fix_ID == -1 && file[totalrequest[i].VideoID].Fix_ID != -1){
@@ -702,9 +609,6 @@ public class ReadFile {
 			}
 			if(user[totalrequest[i].UserID].Fix_ID != -1 && file[totalrequest[i].VideoID].Fix_ID != -1){
 				if(totalrequest[i].timestamp > timethres){
-//					testingrequest[trid].timestamp = totalrequest[i].timestamp;
-//					testingrequest[trid].UserID = user[totalrequest[i].UserID].Fix_ID;
-//					testingrequest[trid].VideoID = file[totalrequest[i].VideoID].Fix_ID;
 					buftestw.write(totalrequest[i].timestamp+"\t"+user[totalrequest[i].UserID].Fix_ID+"\t"+file[totalrequest[i].VideoID].Fix_ID+"\n");
 					trid++;
 					continue;
@@ -722,9 +626,6 @@ public class ReadFile {
 		}
 		System.out.println("rid = "+rid);
 		System.out.println("new user = " + uid);
-//		m_nRequest = rid;
-//		m_nTestReqest =trid;
-// 		totalrequest = new Request[0];
  		bufw.close();
  		buftestw.close();
  	}
@@ -755,28 +656,11 @@ public class ReadFile {
 		return SimResult;		
 	}
 	
-	/*private static double GetJaccard(double[] ni, double[] nj){
-		double SimResult = 0.0;
-		double Denominator = 0.0; //¤À¥À
-		double Numerator = 0.0;   //¤À¤l
-		
-		for(int i=0; i<m_nItemSize; i++){
-			Numerator = Numerator + ( ni[i] * nj[i] );			
-			if(ni[i]==1 || nj[i]==1){
-				Denominator = Denominator + 1;
-			}			
-		}
-		
-		
-		SimResult = Numerator/Denominator;
-		return SimResult;		
-	}*/
-	
 	private static double GetCosSim(double[] ni, double[] nj){
 		double SimResult = 0.0;
-		double Denominator_i = 0.0; //¤À¥À
-		double Denominator_j = 0.0; //¤À¥À
-		double Numerator = 0.0;   //¤À¤l
+		double Denominator_i = 0.0; //ï¿½ï¿½ï¿½ï¿½
+		double Denominator_j = 0.0; //ï¿½ï¿½ï¿½ï¿½
+		double Numerator = 0.0;   //ï¿½ï¿½ï¿½l
 		
 		for(int i=0; i<ni.length; i++){
 			Numerator = Numerator + ( ni[i] * nj[i] );
@@ -785,18 +669,6 @@ public class ReadFile {
 		}
 		SimResult = Numerator/(Math.sqrt(Denominator_i) * Math.sqrt(Denominator_j));
 		return SimResult;	
-	}
-	
-	
-	private static void PrintMatrix(double[][] Matrix){
-		java.text.DecimalFormat  df = new java.text.DecimalFormat("#.00");
-		
-		for(int i =0; i< Matrix.length; i++){
-			for(int j=0;j<Matrix[0].length;j++){
-				System.out.print(df.format(Matrix[i][j])+" ");
-			}
-			System.out.println();
-		}
 	}
 	
 	
